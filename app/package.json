@@ -6,15 +6,30 @@
   "directories": {
     "test": "tests"
   },
+  "type": "module",
   "scripts": {
-    "start": "npx browser-sync --port 3001 -w",
-    "download-asserts": "node download.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "mp4box": "^0.5.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "webm-writer2": "file:lib/webm-writer2"
+  },
   "devDependencies": {
-    "tar": "^6.2.0"
+    "@rocketseat/eslint-config": "^2.1.0",
+    "@types/react": "^18.2.18",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.0.4",
+    "eslint": "^8.46.0",
+    "tar": "^6.2.0",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.8"
   }
 }
