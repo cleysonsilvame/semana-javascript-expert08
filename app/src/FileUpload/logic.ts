@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import Clock from './clock'
 
 import Worker from './worker?worker'
@@ -15,20 +15,6 @@ export function useLogic() {
   const [took, setTook] = React.useState('')
   const [file, setFile] = React.useState<File | null>(null)
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
-  // #fileUpload = document.getElementById('fileUpload')
-  // #btnUploadVideo = document.getElementById('btnUploadVideos')
-  // #fileSize = document.getElementById('fileSize')
-  // #fileInfo = document.getElementById('fileInfo')
-  // #txtfileName = document.getElementById('fileName')
-  // #fileUploadWrapper = document.getElementById('fileUploadWrapper')
-  // #elapsed = document.getElementById('elapsed')
-  // /** @type {HTMLCanvasElement} */
-  // #canvas = document.getElementById('preview-144p')
-
-  //
-  // constructor() {
-  //   this.configureBtnUploadClick()
-  // }
 
   function getCanvas() {
     return canvasRef.current?.transferControlToOffscreen()
@@ -36,33 +22,16 @@ export function useLogic() {
 
   function parseBytesIntoMBAndGB(bytes: number) {
     const mb = bytes / (1024 * 1024)
-    // if mb is greater than 1024, then convert to GB
     if (mb > 1024) {
-      // rount to 2 decimal places
       return `${Math.round(mb / 1024)}GB`
     }
     return `${Math.round(mb)}MB`
   }
 
-  // configureBtnUploadClick() {
-  //   this.#btnUploadVideo.addEventListener('click', () => {
-  //     // trigger file input
-  //     this.#fileUpload.click()
-  //   })
-  // }
-
   function onFileUploadChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.item(0)
     setFile(file as File)
   }
-
-  // updateElapsedTime(text) {
-  //   this.#elapsed.innerText = text
-  // }
-
-  // configureOnFileChange(fn) {
-  //   this.#fileUpload.addEventListener('change', this.onChange(fn))
-  // }
 
   const { fileSize, fileName } = useMemo(
     () => ({
@@ -72,8 +41,29 @@ export function useLogic() {
     [file],
   )
 
-  useEffect(() => {
-    if (file) {
+  function updateElapsedTime(time: string) {
+    setTook(`Process started ${time}`)
+  }
+
+  const finishElapsedTime = useCallback(() => {
+    clock.stop()
+    setTook((state) => `${state.replace('started', 'took').replace('ago', '')}`)
+  }, [])
+
+  const onMessageWorker = useCallback(() => {
+    worker.onmessage = ({ data }) => {
+      if (data.status !== 'done') return
+
+      finishElapsedTime()
+    }
+
+    return () => {
+      worker.onmessage = null
+    }
+  }, [finishElapsedTime])
+
+  const initWorkerProcess = useCallback(() => {
+    if (file && !took) {
       const canvas = getCanvas()!
       worker.postMessage(
         {
@@ -83,24 +73,15 @@ export function useLogic() {
         [canvas],
       )
 
-      clock.start((time) => {
-        setTook(`Process started ${time}`)
-      })
+      clock.start(updateElapsedTime)
     }
-  }, [file])
+  }, [file, took])
 
   useEffect(() => {
-    worker.onmessage = ({ data }) => {
-      if (data.status !== 'done') return
+    initWorkerProcess()
+  }, [initWorkerProcess])
 
-      clock.stop()
-      setTook(`${took.replace('started', 'took').replace('ago', '')}`)
-    }
-
-    return () => {
-      worker.onmessage = null
-    }
-  }, [took])
+  useEffect(onMessageWorker, [onMessageWorker])
 
   return {
     onFileUploadChange,
