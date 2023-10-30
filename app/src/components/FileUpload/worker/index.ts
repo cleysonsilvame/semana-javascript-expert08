@@ -1,38 +1,21 @@
+import WebmWriter from 'webm-writer2'
 import { CanvasRenderer } from './canvas-renderer'
 import { MP4Demuxer } from './mp4-demuxer'
 import { VideoProcessor } from './video-processor'
+import { Service } from './service'
+import { getEncoderConfig, getWebmWriterConfig } from './encoder-config'
 
-const qvgaConstraints = {
-  width: 320,
-  height: 240,
-}
-// const vgaConstraints = {
-//   width: 640,
-//   height: 480,
-// }
-// const hdConstraints = {
-//   width: 1280,
-//   height: 720,
-// }
-
-const encoderConfig = {
-  ...qvgaConstraints,
-  bitrate: 10e6,
-  // WebM
-  codec: 'vp09.00.10.08',
-  pt: 4,
-  hardwareAcceleration: 'prefer-software',
-
-  // MP4
-  // codec: 'avc1.42002A',
-  // pt: 1,
-  // hardwareAcceleration: 'prefer-hardware',
-  // avc: { format: 'annexb' }
-}
+const encoderConfig = getEncoderConfig('qvga', 'webm')
+const webmWriterConfig = getWebmWriterConfig(encoderConfig)
 
 const mp4Demuxer = new MP4Demuxer()
+const webMWriter = new WebmWriter(webmWriterConfig)
+const service = new Service({ url: 'http://localhost:3000' })
+
 const videoProcessor = new VideoProcessor({
   mp4Demuxer,
+  webMWriter,
+  service,
 })
 
 interface Message {
@@ -46,9 +29,6 @@ onmessage = async ({ data }: Message) => {
     file: data.file,
     renderFrame: canvasRenderer.render.bind(canvasRenderer),
     encoderConfig,
-  })
-
-  self.postMessage({
-    status: 'done',
+    sendMessage: self.postMessage.bind(self),
   })
 }

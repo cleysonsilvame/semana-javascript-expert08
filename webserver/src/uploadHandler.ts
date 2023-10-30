@@ -28,12 +28,12 @@ export default class UploadHandler {
     return busboy
   }
 
-  async #onFile(name: string, file: Readable, _info: FileInfo) {
-    const saveFileTo = join(this.#downloadsFolder, name)
+  async #onFile(_name: string, file: Readable, {filename}: FileInfo) {
+    const saveFileTo = join(this.#downloadsFolder, filename)
     logger.info('Uploading: ' + saveFileTo)
 
     await pipeline(file, createWriteStream(saveFileTo))
 
-    logger.info(`File [${name}] finished!`)
+    logger.info(`File [${filename}] finished!`)
   }
 }

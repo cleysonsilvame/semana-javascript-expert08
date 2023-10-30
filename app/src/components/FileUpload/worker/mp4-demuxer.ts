@@ -1,24 +1,22 @@
 import {
   DataStream,
-  MP4ArrayBuffer,
   MP4File,
   MP4Info,
   MP4Sample,
   MP4Track,
-  MP4VideoTrack,
   createFile,
 } from 'mp4box'
 
-interface OnConfigOptions {
-  codec: string
-  codedHeight: number
-  codedWidth: number
-  description: Uint8Array
-  durationSecs: number
-}
+// interface OnConfigOptions {
+//   codec: string
+//   codedHeight: number
+//   codedWidth: number
+//   description: Uint8Array
+//   durationSecs: number
+// }
 
 interface RunOptions {
-  onConfig: (config: OnConfigOptions) => void
+  onConfig: (config: VideoDecoderConfig) => void
   onChunk: (chunk: EncodedVideoChunk) => void
 }
 
@@ -73,7 +71,7 @@ export class MP4Demuxer {
       codedHeight: track.video.height,
       codedWidth: track.video.width,
       description: this.#description(track),
-      durationSecs: track.duration / track.timescale,
+      // durationSecs: track.duration / track.timescale,
     })
 
     this.#file?.setExtractionOptions(track.id)

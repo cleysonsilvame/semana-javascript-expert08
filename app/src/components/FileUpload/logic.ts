@@ -50,17 +50,39 @@ export function useLogic() {
     setTook((state) => `${state.replace('started', 'took').replace('ago', '')}`)
   }, [])
 
+  const downloadBlobAsFile = useCallback(
+    (buffers: Uint8Array[], filename: string) => {
+      const blob = new Blob(buffers, { type: 'video/webm' })
+
+      const url = URL.createObjectURL(blob)
+
+      const link = document.createElement('a')
+
+      link.href = url
+      link.download = filename
+
+      link.click()
+
+      URL.revokeObjectURL(url)
+    },
+    [],
+  )
+
   const onMessageWorker = useCallback(() => {
     worker.onmessage = ({ data }) => {
       if (data.status !== 'done') return
 
       finishElapsedTime()
+
+      if (!data.buffers) return
+
+      downloadBlobAsFile(data.buffers, data.filename)
     }
 
     return () => {
       worker.onmessage = null
     }
-  }, [finishElapsedTime])
+  }, [finishElapsedTime, downloadBlobAsFile])
 
   const initWorkerProcess = useCallback(() => {
     if (file && !took) {
